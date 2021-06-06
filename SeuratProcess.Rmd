@@ -1,0 +1,110 @@
+# Seurat Pre-process {#intro}
+
+
+
+```{r setup, include=FALSE}
+library(Seurat)
+library(tidyverse)
+library(magrittr)
+library(data.table)
+library(ggplot2)
+library(gridExtra)
+library(stringr)
+```
+
+```{r klippy, echo=FALSE, include=TRUE}
+klippy::klippy(lang = "markdown")
+```
+
+
+
+## Load count matrix from CellRanger
+
+* for one experiment
+
+```{r, eval = FALSE}
+pre <- Read10X(data.dir = 'cellranger-res/Pre-B/outs/filtered_feature_bc_matrix/')
+pre <- CreateSeuratObject(counts = pre, project = '11002C', min.cells = 3)
+```
+
+* for multiple experiments
+
+```{r, eval = FALSE}
+# step1 list sample directories ----------------------------------------------
+dir.ls <- list.dirs(path = 'cellranger-count/',
+            full.names = T,
+            recursive = F)
+dir.ls <- dir.ls[c(2:5)]
+dir.ls %<>% map( ~ paste0(.x, "/outs/filtered_feature_bc_matrix"))
+names(dir.ls) <- c('68A', '68B', '84B', '84C')
+
+# step2 check whether dir exist -------------------------------------------
+dir.ls %>% map( ~ dir.exists(.x))
+
+# step3 create seurat per samples -----------------------------------------
+obj.ls <- dir.ls %>% map( ~ Read10X(.x)) %>% map( ~ CreateSeuratObject(.x, min.cells = 3))
+```
+
+### Quality control by visualization 
+
+```{bash, eval = FALSE}
+V1_Seurat_QC-CellLevelFiltering.R
+```
+
+## Cell-level filtering
+
+```{r, eval = FALSE}
+# filtering by nCount and nFeatures per individual
+filterCell <- function(combined){
+  # calculate the quantile range
+  count.feature.ls <- combined@meta.data[, c("nCount_RNA", "nFeature_RNA")]
+  count.feature.ls %<>% map(log10) %>% map(~c(10^(mean(.x) + 3*sd(.x)), 10^(mean(.x) - 3*sd(.x))))
+
+  # filter cells
+  combined <- subset(combined, subset = nFeature_RNA > 200 & 
+                     nFeature_RNA < count.feature.ls[[2]][1] & 
+                     nCount_RNA < count.feature.ls[[1]][1]) 
+  return(combined)
+}
+obj.ls %<>% map(filterCell)
+```
+
+## Merge individuals
+```{r, eval = FALSE}
+combined <- merge(x = obj.ls[[1]],
+                  y = obj.ls[2:4],
+                  add.cell.ids = names(dir.ls))
+```
+
+
+## Normalize, scale, find variable genes and dimension reduciton
+
+* Choose the number of PC 
+
+* SCT
+
+```{r, eval = FALSE}
+combined %<>% 
+  SCTransform(return.only.var.genes = FALSE) %>%
+  RunPCA(features = VariableFeatures(object = .)) %>%
+  FindNeighbors(dims = 1:40) %>%
+  FindClusters(resolution = c(0.5, 0.6, 0.8, 1, 1.2, 1.5, 1.8,2,2.5,3)) %>%
+  RunUMAP(dims = 1:40) %>%
+  RunTSNE(dims = 1:40)
+```
+
+* standard process
+
+```{r, eval = FALSE}
+combined %<>% 
+  NormalizeData() %>% 
+  FindVariableFeatures(selection.method = 'vst', nfeatures = 2000) %>%
+  ScaleData(features = rownames(.)) %>%
+  RunPCA(features = VariableFeatures(object = .)) %>%
+  FindNeighbors(dims = 1:30) %>%
+  FindClusters(resolution = c(0.5, 0.6, 0.8, 1, 1.2, 1.5, 1.8,2,2.5,3)) %>%
+  RunUMAP(dims = 1:30) %>%
+  RunTSNE(dims = 1:30)
+```
+
+

@@ -1,0 +1,33 @@
+# Find Doublet using Scrublet
+
+
+## description
+
+Scoring and identify doublet using scrublet per samples
+
+
+
+## input data
+
+filtered count matrix by cellRanger per samples 
+
+## process
+
+* running scrublet per samples 
+
+* `N2-DoubletIdentify-Scurblet-Process.py -i Pre-A -r 0.02`
+  * expected doublet ratio is calculated by ~ 0.8% per 1k cell
+  * other parameters by default
+
+
+## output
+
+* doublet scoring and identificaiton 
+
+  *  `data/scrublet/*DoubletScores.csv`
+  *  `data/scrublet/*PredictedDoublets.csv`
+
+* validation plots
+
+  * `data/scrublet/pdf`
+  

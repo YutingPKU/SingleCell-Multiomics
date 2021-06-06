@@ -1,0 +1,55 @@
+---
+title: "Stacked vlnplot for given gene sets"
+author: "Yuting Liu"
+date: "2021/5/29"
+---
+title: "Explore the batch biases for individuals/samples"
+author: "Yuting Liu"
+date: "2021/5/29"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+
+---
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_knit$set(root.dir = "~/lustrelyt/github/SingleCell-MultiOmics_Process_Visualization")
+knitr::opts_chunk$set(echo = TRUE)
+library(Seurat)
+library(tidyverse)
+library(magrittr)
+library(data.table)
+```
+
+```{r klippy, echo=FALSE, include=TRUE}
+klippy::klippy(position = c("top", "right"))
+```
+
+## Descripiton
+
+Stacked vlnplot for given gene set
+
+
+## Load seurat object
+
+```{r loaddata}
+combined <- get(load('data/Demo_CombinedSeurat_SCT_Preprocess.RData'))
+```
+
+## Source stacked vlnplot funciton
+
+```{r stackevlnfunc}
+source("scripts/visualize/Stacked-Vlnplot.R")
+```
+
+## Stacked Vlnplot given gene set
+
+```{r stackedvlnplot}
+sel.gene <- c("PAX6", "RBFOX1", "GAD1")
+
+StackedVlnPlot(combined, sel.gene, pt.size = 0)
+```
+

@@ -1,0 +1,80 @@
+---
+title: "Assign gene signature given gene list"
+author: "Yuting Liu"
+date: "2021/5/29"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+
+---
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_knit$set(root.dir = "~/lustrelyt/github/SingleCell-MultiOmics_Process_Visualization")
+knitr::opts_chunk$set(echo = TRUE)
+library(Seurat)
+library(tidyverse)
+library(magrittr)
+library(gridExtra)
+library(data.table)
+```
+
+```{r klippy, echo=FALSE, include=TRUE}
+klippy::klippy(position = c("top", "right"))
+```
+
+## Description 
+
+Given a gene list, calculate gene signature by averaging gene expresion
+
+
+## Load seurat object
+
+```{r loaddata}
+combined <- get(load('data/Demo_CombinedSeurat_SCT_Preprocess.RData'))
+Idents(combined) <- "cluster"
+```
+
+
+## Load gene lists, here using the layer-enriched genes as examples
+
+```{r loadgene}
+f.ls <- list.files(
+  "data/GeneList/",
+  pattern = "FDR001.upDEG.csv$",
+  full.names = T,
+  recursive = T
+)
+names(f.ls) <-
+  f.ls %>% map(basename) %>% map( ~ str_remove(.x, "vs.*"))
+
+layer.ls <- f.ls %>% map( ~ {
+  df <- fread(.x)
+  gn <- df$id[!is.na(df$id)]
+  gn <- gn[which(gn %in% rownames(combined))]
+  return(gn)
+})
+```
+
+## Calcuate gene signature per gene list
+
+```{r genesignature}
+mean.ls <- layer.ls %>% map_dfc(~ colMeans(x = as.matrix(combined@assays$SCT[.x, ]), na.rm = TRUE))
+rownames(mean.ls) <- rownames(combined@meta.data)
+combined <- AddMetaData(combined, mean.ls, col.name = colnames(mean.ls))
+```
+
+## Explore the gene signature by `FeaturePlot` and `VlnPlot`
+
+```{r plot}
+names(layer.ls) %>% map(~ FeaturePlot(object = combined, features = .x, pt.size = 0.001))
+names(layer.ls) %>% map(~ {
+  VlnPlot(object = combined, features = .x, pt.size = 0) + NoLegend()
+  })
+```
+
+
+
+

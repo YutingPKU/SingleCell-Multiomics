@@ -1,0 +1,55 @@
+# Assign Gene Signature 
+
+## Description 
+
+Given a gene list, calculate gene signature by averaging gene expresion
+
+
+## Load seurat object
+
+```{r, cache=TRUE}
+combined <- get(load('data/Demo_CombinedSeurat_SCT_Preprocess.RData'))
+Idents(combined) <- "cluster"
+```
+
+
+## Load gene lists, here using the layer-enriched genes as examples
+
+```{r loadgene, cache=TRUE}
+f.ls <- list.files(
+  "data/GeneList/",
+  pattern = "FDR001.upDEG.csv$",
+  full.names = T,
+  recursive = T
+)
+names(f.ls) <-
+  f.ls %>% map(basename) %>% map( ~ str_remove(.x, "vs.*"))
+
+layer.ls <- f.ls %>% map( ~ {
+  df <- fread(.x)
+  gn <- df$id[!is.na(df$id)]
+  gn <- gn[which(gn %in% rownames(combined))]
+  return(gn)
+})
+```
+
+## Calcuate gene signature per gene list
+
+```{r genesignature, cache=TRUE}
+mean.ls <- layer.ls %>% map_dfc(~ colMeans(x = as.matrix(combined@assays$SCT[.x, ]), na.rm = TRUE))
+rownames(mean.ls) <- rownames(combined@meta.data)
+combined <- AddMetaData(combined, mean.ls, col.name = colnames(mean.ls))
+```
+
+## Explore the gene signature by `FeaturePlot` and `VlnPlot`
+
+```{r plot, cache=TRUE}
+names(layer.ls) %>% map(~ FeaturePlot(object = combined, features = .x, pt.size = 0.001))
+names(layer.ls) %>% map(~ {
+  VlnPlot(object = combined, features = .x, pt.size = 0) + NoLegend()
+  })
+```
+
+
+
+

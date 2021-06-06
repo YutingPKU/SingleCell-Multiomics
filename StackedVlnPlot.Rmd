@@ -1,0 +1,27 @@
+# Stacked Vlnplot for Given Features Sets
+
+## Descripiton
+
+Stacked vlnplot for given gene set. `Seurat` V4 has provided the similar function
+
+
+## Load seurat object
+
+```{r, cache=TRUE}
+combined <- get(load('data/Demo_CombinedSeurat_SCT_Preprocess.RData'))
+```
+
+## Source stacked vlnplot funciton
+
+```{r stackevlnfunc, cache=TRUE}
+source("scripts/visualize/Stacked-Vlnplot.R")
+```
+
+## Stacked Vlnplot given gene set
+
+```{r stackedvlnplot, cache=TRUE}
+sel.gene <- c("PAX6", "RBFOX1", "GAD1")
+
+StackedVlnPlot(combined, sel.gene, pt.size = 0)
+```
+

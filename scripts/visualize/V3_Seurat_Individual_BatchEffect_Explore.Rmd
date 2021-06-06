@@ -1,0 +1,89 @@
+---
+title: "Explore the batch biases for individuals/samples"
+author: "Yuting Liu"
+date: "2021/5/29"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+
+---
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_knit$set(root.dir = "~/lustrelyt/github/SingleCell-MultiOmics_Process_Visualization")
+knitr::opts_chunk$set(echo = TRUE)
+library(Seurat)
+library(tidyverse)
+library(magrittr)
+library(gridExtra)
+library(data.table)
+```
+
+```{r klippy, echo=FALSE, include=TRUE}
+klippy::klippy(position = c("top", "right"))
+```
+
+## Descripiton
+
+Explore the individual batch effect by 
+
+* Dimplot split by individual
+
+* Fractions of individuals per cluster
+
+
+## Load seurat object
+
+```{r loaddata}
+combined <- get(load('data/Demo_CombinedSeurat_SCT_Preprocess.RData'))
+```
+
+## Explore individual distribution by `Dimplot`
+
+```{r Dimplot}
+Idents(object = combined) <- 'Individual'
+DimPlot(object = combined, reduction = "umap", label = T) 
+DimPlot(object = combined, reduction = "tsne", label = T) 
+```
+
+## Calculate individual distribution per cluster with different resolution
+
+```{r histogram}
+df <- data.table(combined@meta.data)
+sel.meta <- c("Individual", str_c('SCT_snn_res.', c(1, 1.5, 1.8)))
+df <- df[, sel.meta, with = FALSE]
+
+
+df[, 2:4] %>% imap(~ {
+    freq1 <- df[, .N, keyby = .(.x, Individual)]
+    freq1[, total := sum(N), by = .(.x)]
+    freq1[, ratio := N / total]
+    
+    linesize = .35
+    fontsize = 8
+    
+    ggplot(freq1, aes(fill = Individual, y = ratio, x = .x)) +
+      geom_bar(position = "stack", stat = "identity") +
+      scale_fill_brewer(palette = "Dark2") +
+      xlab('Clsuter') +
+      ggtitle(.y) +
+      scale_y_continuous(breaks = seq(0, 1, 0.1),
+                         expand = c(0, 0),
+                         name = 'Percentage') +
+      theme_bw() +
+      theme(
+        panel.grid.major.x = element_blank(),
+        panel.grid.major.y = element_blank(),
+        panel.grid.minor = element_blank(),
+        strip.background = element_blank(),
+        panel.border = element_rect(size = linesize),
+        axis.ticks = element_blank(),
+        axis.text.x = element_text(size = 5)
+      ) +
+      coord_flip()
+})
+
+```
+

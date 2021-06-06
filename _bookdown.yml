@@ -1,0 +1,22 @@
+book_filename: "bookdown-demo"
+language:
+  ui:
+    chapter_name: "Chapter "
+delete_merged_file: true
+output_dir: "docs"
+
+rmd_files: [
+  "index.Rmd",
+
+  "scRNA-Process.Rmd",
+  "SeuratProcess.Rmd",
+  "ScrubletDoublet.Rmd",
+
+  "scRNA-Visualize.Rmd",
+  "SeuratCellLevelFiltering.Rmd",
+  "ScrubletDoubletValidation.Rmd",
+  "IndividualBatchEffectExploration.Rmd",
+  "AssignGeneSignature.Rmd",
+  "StackedVlnPlot.Rmd"
+
+]

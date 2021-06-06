@@ -1,0 +1,19 @@
+--- 
+title: "Single Cell Multi-Omics Data Analysis"
+author: "Yuting Liu"
+date: "`r Sys.Date()`"
+site: bookdown::bookdown_site
+output: bookdown::gitbook
+documentclass: book
+bibliography: [book.bib, packages.bib]
+biblio-style: apalike
+link-citations: yes
+github-repo: rstudio/bookdown-demo
+description: "This book is a collection for pre-processing and visualizing scripts for single cell milti-omics data. The data is downsampled from a real dataset."
+---
+
+# Preface
+
+This book is a collection for pre-processing and visualizing scripts for single cell multi-omics data. The data is down-sampled from a real dataset.
+
+
